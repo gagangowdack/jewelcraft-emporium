@@ -1,8 +1,23 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 export const CTASection = () => {
+  const handleShopNow = () => {
+    const element = document.querySelector("#new-arrivals");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleBookConsultation = () => {
+    toast({
+      title: "Book a Consultation",
+      description: "Our consultation booking system is coming soon! Email us at hello@lumiere.com",
+    });
+  };
+
   return (
     <section className="py-24 lg:py-32 relative overflow-hidden">
       {/* Background Image */}
@@ -70,6 +85,7 @@ export const CTASection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
+                onClick={handleShopNow}
                 className="bg-gradient-gold text-charcoal hover:opacity-90 font-body uppercase tracking-wider px-10 py-6 text-sm group shadow-gold"
               >
                 Shop Now
@@ -78,6 +94,7 @@ export const CTASection = () => {
               <Button
                 size="lg"
                 variant="outline"
+                onClick={handleBookConsultation}
                 className="border-cream/30 text-cream hover:bg-cream/10 font-body uppercase tracking-wider px-10 py-6 text-sm"
               >
                 Book Consultation

@@ -1,8 +1,23 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 export const HeroSection = () => {
+  const handleExploreCollection = () => {
+    const element = document.querySelector("#collections");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleViewLookbook = () => {
+    toast({
+      title: "Lookbook",
+      description: "Our digital lookbook is coming soon!",
+    });
+  };
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-luxury">
       {/* Decorative Elements */}
@@ -81,6 +96,7 @@ export const HeroSection = () => {
             >
               <Button
                 size="lg"
+                onClick={handleExploreCollection}
                 className="bg-gradient-gold text-primary-foreground hover:opacity-90 font-body uppercase tracking-wider px-8 py-6 text-sm group shadow-gold"
               >
                 Explore Collection
@@ -89,6 +105,7 @@ export const HeroSection = () => {
               <Button
                 size="lg"
                 variant="outline"
+                onClick={handleViewLookbook}
                 className="border-foreground/20 hover:bg-foreground/5 font-body uppercase tracking-wider px-8 py-6 text-sm"
               >
                 View Lookbook
@@ -156,7 +173,9 @@ export const HeroSection = () => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 }}
-                className="absolute -bottom-6 -left-4 lg:-left-8 glass-effect rounded-2xl p-4 shadow-soft"
+                className="absolute -bottom-6 -left-4 lg:-left-8 glass-effect rounded-2xl p-4 shadow-soft cursor-pointer"
+                onClick={handleExploreCollection}
+                whileHover={{ scale: 1.02 }}
               >
                 <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Featured</div>
                 <div className="font-display text-lg">Celestial Collection</div>

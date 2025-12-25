@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ShoppingBag, Eye, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "@/hooks/use-toast";
 
 const products = [
   {
@@ -83,7 +85,35 @@ const products = [
 
 const ProductCard = ({ product, index }: { product: typeof products[0]; index: number }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const isLiked = isInWishlist(product.id);
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+    });
+  };
+
+  const handleToggleWishlist = () => {
+    toggleWishlist({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+    });
+  };
+
+  const handleQuickView = () => {
+    toast({
+      title: "Quick View",
+      description: `Viewing ${product.name}`,
+    });
+  };
 
   return (
     <motion.div
@@ -124,7 +154,7 @@ const ProductCard = ({ product, index }: { product: typeof products[0]; index: n
         {/* Wishlist Button */}
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => setIsLiked(!isLiked)}
+          onClick={handleToggleWishlist}
           className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
             isLiked 
               ? "bg-rose-gold text-charcoal" 
@@ -145,6 +175,7 @@ const ProductCard = ({ product, index }: { product: typeof products[0]; index: n
             >
               <Button
                 size="sm"
+                onClick={handleAddToCart}
                 className="flex-1 bg-gold text-charcoal hover:bg-gold-light font-body text-xs uppercase tracking-wider"
               >
                 <ShoppingBag className="w-4 h-4 mr-2" />
@@ -153,6 +184,7 @@ const ProductCard = ({ product, index }: { product: typeof products[0]; index: n
               <Button
                 size="sm"
                 variant="outline"
+                onClick={handleQuickView}
                 className="bg-background/80 backdrop-blur-sm border-0 hover:bg-background"
               >
                 <Eye className="w-4 h-4" />
@@ -185,6 +217,13 @@ const ProductCard = ({ product, index }: { product: typeof products[0]; index: n
 };
 
 export const FeaturedProducts = () => {
+  const handleViewAll = () => {
+    toast({
+      title: "Coming Soon",
+      description: "Full product catalog will be available soon!",
+    });
+  };
+
   return (
     <section className="py-24 lg:py-32 bg-background" id="new-arrivals">
       <div className="container mx-auto px-6 lg:px-12">
@@ -221,6 +260,7 @@ export const FeaturedProducts = () => {
           <Button
             size="lg"
             variant="outline"
+            onClick={handleViewAll}
             className="border-gold/30 text-gold hover:bg-gold/10 font-body uppercase tracking-wider px-12"
           >
             View All Products
