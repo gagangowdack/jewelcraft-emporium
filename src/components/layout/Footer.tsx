@@ -1,23 +1,25 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Instagram, Facebook, Twitter, Youtube, Mail, Phone, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 const footerLinks = {
   shop: [
-    { name: "All Jewelry", href: "#" },
-    { name: "Rings", href: "#" },
-    { name: "Necklaces", href: "#" },
-    { name: "Earrings", href: "#" },
-    { name: "Bracelets", href: "#" },
-    { name: "Watches", href: "#" },
+    { name: "All Jewelry", href: "#new-arrivals" },
+    { name: "Rings", href: "#rings" },
+    { name: "Necklaces", href: "#necklaces" },
+    { name: "Earrings", href: "#earrings" },
+    { name: "Bracelets", href: "#new-arrivals" },
+    { name: "Watches", href: "#new-arrivals" },
   ],
   about: [
-    { name: "Our Story", href: "#" },
-    { name: "Craftsmanship", href: "#" },
-    { name: "Sustainability", href: "#" },
-    { name: "Press", href: "#" },
-    { name: "Careers", href: "#" },
+    { name: "Our Story", href: "#about" },
+    { name: "Craftsmanship", href: "#about" },
+    { name: "Sustainability", href: "#about" },
+    { name: "Press", href: "#about" },
+    { name: "Careers", href: "#about" },
   ],
   support: [
     { name: "Contact Us", href: "#" },
@@ -29,13 +31,50 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Twitter, href: "#", label: "Twitter" },
-  { icon: Youtube, href: "#", label: "Youtube" },
+  { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+  { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
+  { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+  { icon: Youtube, href: "https://youtube.com", label: "Youtube" },
 ];
 
 export const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    toast({
+      title: "Welcome to Lumière!",
+      description: "You've been subscribed to our exclusive newsletter.",
+    });
+    setEmail("");
+    setIsSubmitting(false);
+  };
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   return (
     <footer className="bg-charcoal text-cream">
       {/* Newsletter Section */}
@@ -53,14 +92,20 @@ export const Footer = () => {
             <p className="text-cream/60 mb-8 font-body text-sm">
               Subscribe to receive first access to new collections, exclusive offers, and curated content.
             </p>
-            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <Input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="bg-cream/10 border-cream/20 text-cream placeholder:text-cream/40 focus:border-gold"
               />
-              <Button className="bg-gradient-gold text-charcoal hover:opacity-90 font-body uppercase tracking-wider px-8">
-                Subscribe
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-gradient-gold text-charcoal hover:opacity-90 font-body uppercase tracking-wider px-8"
+              >
+                {isSubmitting ? "Subscribing..." : "Subscribe"}
               </Button>
             </form>
           </div>
@@ -87,14 +132,14 @@ export const Footer = () => {
                 <MapPin className="w-4 h-4 text-gold" />
                 <span>5th Avenue, New York, NY 10001</span>
               </div>
-              <div className="flex items-center gap-3">
+              <a href="tel:+15551234567" className="flex items-center gap-3 hover:text-gold transition-colors">
                 <Phone className="w-4 h-4 text-gold" />
                 <span>+1 (555) 123-4567</span>
-              </div>
-              <div className="flex items-center gap-3">
+              </a>
+              <a href="mailto:hello@lumiere.com" className="flex items-center gap-3 hover:text-gold transition-colors">
                 <Mail className="w-4 h-4 text-gold" />
                 <span>hello@lumiere.com</span>
-              </div>
+              </a>
             </div>
           </div>
 
@@ -106,6 +151,7 @@ export const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
+                    onClick={(e) => handleLinkClick(e, link.href)}
                     className="text-sm text-cream/60 hover:text-gold transition-colors font-body"
                   >
                     {link.name}
@@ -123,6 +169,7 @@ export const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
+                    onClick={(e) => handleLinkClick(e, link.href)}
                     className="text-sm text-cream/60 hover:text-gold transition-colors font-body"
                   >
                     {link.name}
@@ -140,6 +187,13 @@ export const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast({
+                        title: link.name,
+                        description: "This page will be available soon!",
+                      });
+                    }}
                     className="text-sm text-cream/60 hover:text-gold transition-colors font-body"
                   >
                     {link.name}
@@ -163,6 +217,8 @@ export const Footer = () => {
                 <motion.a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   className="w-10 h-10 rounded-full border border-cream/20 flex items-center justify-center hover:border-gold hover:bg-gold/10 transition-all"
@@ -173,9 +229,36 @@ export const Footer = () => {
               ))}
             </div>
             <div className="flex items-center gap-6 text-sm text-cream/40">
-              <a href="#" className="hover:text-gold transition-colors font-body">Privacy</a>
-              <a href="#" className="hover:text-gold transition-colors font-body">Terms</a>
-              <a href="#" className="hover:text-gold transition-colors font-body">Cookies</a>
+              <a 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast({ title: "Privacy Policy", description: "Coming soon!" });
+                }}
+                className="hover:text-gold transition-colors font-body"
+              >
+                Privacy
+              </a>
+              <a 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast({ title: "Terms of Service", description: "Coming soon!" });
+                }}
+                className="hover:text-gold transition-colors font-body"
+              >
+                Terms
+              </a>
+              <a 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast({ title: "Cookie Policy", description: "Coming soon!" });
+                }}
+                className="hover:text-gold transition-colors font-body"
+              >
+                Cookies
+              </a>
             </div>
           </div>
         </div>

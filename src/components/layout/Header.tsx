@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, Search, Heart, User } from "lucide-react";
+import { Menu, X, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { CartSheet } from "@/components/CartSheet";
+import { WishlistSheet } from "@/components/WishlistSheet";
+import { SearchModal } from "@/components/SearchModal";
 
 const navLinks = [
   { name: "Collections", href: "#collections" },
@@ -16,7 +18,7 @@ const navLinks = [
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [cartCount] = useState(3);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +27,15 @@ export const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -63,6 +74,7 @@ export const Header = () => {
                 <motion.a
                   key={link.name}
                   href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -79,17 +91,14 @@ export const Header = () => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setIsSearchOpen(true)}
                 className="p-2 rounded-full hover:bg-muted transition-colors"
               >
                 <Search className="w-5 h-5 text-foreground/70" />
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-full hover:bg-muted transition-colors hidden sm:flex"
-              >
-                <Heart className="w-5 h-5 text-foreground/70" />
-              </motion.button>
+              
+              <WishlistSheet />
+              
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -97,18 +106,8 @@ export const Header = () => {
               >
                 <User className="w-5 h-5 text-foreground/70" />
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative p-2 rounded-full hover:bg-muted transition-colors"
-              >
-                <ShoppingBag className="w-5 h-5 text-foreground/70" />
-                {cartCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-primary text-primary-foreground text-xs">
-                    {cartCount}
-                  </Badge>
-                )}
-              </motion.button>
+              
+              <CartSheet />
               
               {/* Mobile Menu Button */}
               <button
@@ -125,6 +124,9 @@ export const Header = () => {
           </div>
         </div>
       </motion.header>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -154,14 +156,21 @@ export const Header = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={(e) => handleNavClick(e, link.href)}
                     className="font-display text-2xl text-foreground hover:text-primary transition-colors"
                   >
                     {link.name}
                   </motion.a>
                 ))}
                 <div className="border-t border-border pt-6 mt-4">
-                  <Button className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90">
+                  <Button 
+                    className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90"
+                    onClick={() => {
+                      const element = document.querySelector("#new-arrivals");
+                      if (element) element.scrollIntoView({ behavior: "smooth" });
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
                     Shop Now
                   </Button>
                 </div>
