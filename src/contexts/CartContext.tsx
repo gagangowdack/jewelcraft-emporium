@@ -2,32 +2,32 @@ import { createContext, useContext, useState, ReactNode } from "react";
 import { toast } from "@/hooks/use-toast";
 
 export interface CartItem {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   image: string;
   quantity: number;
-  category: string;
+  category?: string;
 }
 
 export interface WishlistItem {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   image: string;
-  category: string;
+  category?: string;
 }
 
 interface CartContextType {
   cartItems: CartItem[];
   wishlistItems: WishlistItem[];
   addToCart: (item: Omit<CartItem, "quantity">) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (id: string | number) => void;
+  updateQuantity: (id: string | number, quantity: number) => void;
   clearCart: () => void;
   addToWishlist: (item: WishlistItem) => void;
-  removeFromWishlist: (id: number) => void;
-  isInWishlist: (id: number) => boolean;
+  removeFromWishlist: (id: string | number) => void;
+  isInWishlist: (id: string | number) => boolean;
   toggleWishlist: (item: WishlistItem) => void;
   cartTotal: number;
   cartCount: number;
@@ -59,7 +59,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string | number) => {
     setCartItems((prev) => {
       const item = prev.find((i) => i.id === id);
       if (item) {
@@ -72,7 +72,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string | number, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(id);
       return;
@@ -101,7 +101,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const removeFromWishlist = (id: number) => {
+  const removeFromWishlist = (id: string | number) => {
     setWishlistItems((prev) => {
       const item = prev.find((i) => i.id === id);
       if (item) {
@@ -114,7 +114,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const isInWishlist = (id: number) => {
+  const isInWishlist = (id: string | number) => {
     return wishlistItems.some((item) => item.id === id);
   };
 
