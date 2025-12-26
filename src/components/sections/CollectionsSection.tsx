@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const collections = [
   {
@@ -55,53 +56,56 @@ export const CollectionsSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {collections.map((collection, index) => (
-            <motion.a
+            <Link
               key={collection.id}
-              href={`#collection-${collection.id}`}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.15 }}
-              className="group relative aspect-[4/3] lg:aspect-[16/10] rounded-2xl overflow-hidden cursor-pointer"
+              to={`/collection/${collection.name.toLowerCase().replace(/\s+/g, '-')}`}
             >
-              {/* Background Image */}
-              <img
-                src={collection.image}
-                alt={collection.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/40 to-transparent" />
-              
-              {/* Content */}
-              <div className="absolute inset-0 p-6 lg:p-8 flex flex-col justify-end">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-gold text-sm font-body uppercase tracking-widest mb-2">
-                      {collection.itemCount} Pieces
-                    </p>
-                    <h3 className="font-display text-3xl lg:text-4xl text-cream mb-2">
-                      {collection.name}
-                    </h3>
-                    <p className="text-cream/70 font-body text-sm lg:text-base">
-                      {collection.description}
-                    </p>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.15 }}
+                className="group relative aspect-[4/3] lg:aspect-[16/10] rounded-2xl overflow-hidden cursor-pointer"
+              >
+                {/* Background Image */}
+                <img
+                  src={collection.image}
+                  alt={collection.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/40 to-transparent" />
+                
+                {/* Content */}
+                <div className="absolute inset-0 p-6 lg:p-8 flex flex-col justify-end">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-gold text-sm font-body uppercase tracking-widest mb-2">
+                        {collection.itemCount} Pieces
+                      </p>
+                      <h3 className="font-display text-3xl lg:text-4xl text-cream mb-2">
+                        {collection.name}
+                      </h3>
+                      <p className="text-cream/70 font-body text-sm lg:text-base">
+                        {collection.description}
+                      </p>
+                    </div>
+                    
+                    <motion.div
+                      initial={{ x: 0 }}
+                      whileHover={{ x: 5 }}
+                      className="w-12 h-12 rounded-full bg-gold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    >
+                      <ArrowRight className="w-5 h-5 text-charcoal" />
+                    </motion.div>
                   </div>
-                  
-                  <motion.div
-                    initial={{ x: 0 }}
-                    whileHover={{ x: 5 }}
-                    className="w-12 h-12 rounded-full bg-gold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
-                  >
-                    <ArrowRight className="w-5 h-5 text-charcoal" />
-                  </motion.div>
                 </div>
-              </div>
-              
-              {/* Hover Border Effect */}
-              <div className="absolute inset-0 rounded-2xl border-2 border-gold/0 group-hover:border-gold/50 transition-colors duration-300" />
-            </motion.a>
+                
+                {/* Hover Border Effect */}
+                <div className="absolute inset-0 rounded-2xl border-2 border-gold/0 group-hover:border-gold/50 transition-colors duration-300" />
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>
