@@ -7,6 +7,7 @@ import { CartProvider } from "./contexts/CartContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CategoryPage from "./pages/CategoryPage";
+import CollectionPage from "./pages/CollectionPage";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/category/:category" element={<CategoryPage />} />
+              <Route path="/collection/:collection" element={<CollectionPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
