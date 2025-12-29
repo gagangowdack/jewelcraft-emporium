@@ -10,6 +10,7 @@ import CategoryPage from "./pages/CategoryPage";
 import CollectionPage from "./pages/CollectionPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AuthPage from "./pages/AuthPage";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
               <Route path="/category/:category" element={<CategoryPage />} />
               <Route path="/collection/:collection" element={<CollectionPage />} />
               <Route path="/admin" element={<AdminLogin />} />

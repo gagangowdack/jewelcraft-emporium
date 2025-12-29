@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 
 // Demo data
 const initialProducts = [
@@ -87,18 +88,49 @@ const AdminDashboard = () => {
     stock: '',
   });
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('adminAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/admin');
-    }
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        navigate('/admin');
+        return;
+      }
+
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (!roles) {
+        toast.error('You do not have admin access');
+        await supabase.auth.signOut();
+        navigate('/admin');
+        return;
+      }
+
+      setIsAuthenticated(true);
+    };
+
+    checkAuth();
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminAuthenticated');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast.success('Logged out successfully');
     navigate('/admin');
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.category || !newProduct.price) {
