@@ -44,16 +44,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { Textarea } from '@/components/ui/textarea';
 
-// Demo data
-const initialProducts = [
-  { id: 1, name: 'Diamond Solitaire Ring', category: 'Rings', subcategory: 'Diamond', price: 2499, stock: 15, status: 'Active' },
-  { id: 2, name: 'Gold Chain Necklace', category: 'Necklaces', subcategory: 'Gold', price: 899, stock: 23, status: 'Active' },
-  { id: 3, name: 'Pearl Drop Earrings', category: 'Earrings', subcategory: 'Pearl', price: 349, stock: 0, status: 'Out of Stock' },
-  { id: 4, name: 'Silver Tennis Bracelet', category: 'Bracelets', subcategory: 'Silver', price: 599, stock: 8, status: 'Active' },
-  { id: 5, name: 'Sapphire Engagement Ring', category: 'Rings', subcategory: 'Gemstone', price: 3299, stock: 5, status: 'Active' },
-];
-
+// Demo data for orders and users (not connected to DB yet)
 const initialOrders = [
   { id: 'ORD-001', customer: 'Emma Wilson', items: 2, total: 3398, status: 'Delivered', date: '2024-01-15' },
   { id: 'ORD-002', customer: 'James Brown', items: 1, total: 899, status: 'Shipped', date: '2024-01-16' },
@@ -69,26 +62,61 @@ const initialUsers = [
   { id: 4, name: 'Michael Chen', email: 'michael@email.com', orders: 2, totalSpent: 4998, joined: '2023-11-05' },
 ];
 
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string | null;
+  price: number;
+  stock: number;
+  status: string;
+  material: string | null;
+  image_url: string | null;
+  is_new: boolean;
+  is_bestseller: boolean;
+}
+
 type Tab = 'overview' | 'products' | 'orders' | 'users';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState(initialOrders);
   const [users] = useState(initialUsers);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<typeof initialProducts[0] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: '',
     subcategory: '',
     price: '',
     stock: '',
+    material: '',
+    image_url: '',
+    is_new: false,
+    is_bestseller: false,
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Fetch products from database
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast.error('Failed to fetch products');
+      console.error(error);
+    } else {
+      setProducts(data || []);
+    }
+    setIsLoading(false);
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -113,6 +141,7 @@ const AdminDashboard = () => {
       }
 
       setIsAuthenticated(true);
+      fetchProducts();
     };
 
     checkAuth();
@@ -132,31 +161,61 @@ const AdminDashboard = () => {
     );
   }
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.category || !newProduct.price) {
       toast.error('Please fill all required fields');
       return;
     }
 
-    const product = {
-      id: products.length + 1,
+    const stock = parseInt(newProduct.stock) || 0;
+    const productData = {
       name: newProduct.name,
       category: newProduct.category,
-      subcategory: newProduct.subcategory,
+      subcategory: newProduct.subcategory || null,
       price: parseFloat(newProduct.price),
-      stock: parseInt(newProduct.stock) || 0,
-      status: parseInt(newProduct.stock) > 0 ? 'Active' : 'Out of Stock',
+      stock: stock,
+      status: stock > 0 ? 'Active' : 'Out of Stock',
+      material: newProduct.material || null,
+      image_url: newProduct.image_url || null,
+      is_new: newProduct.is_new,
+      is_bestseller: newProduct.is_bestseller,
     };
 
-    setProducts([...products, product]);
-    setNewProduct({ name: '', category: '', subcategory: '', price: '', stock: '' });
+    const { error } = await supabase.from('products').insert(productData);
+
+    if (error) {
+      toast.error('Failed to add product');
+      console.error(error);
+      return;
+    }
+
+    setNewProduct({ 
+      name: '', 
+      category: '', 
+      subcategory: '', 
+      price: '', 
+      stock: '',
+      material: '',
+      image_url: '',
+      is_new: false,
+      is_bestseller: false,
+    });
     setIsAddProductOpen(false);
     toast.success('Product added successfully');
+    fetchProducts();
   };
 
-  const handleDeleteProduct = (id: number) => {
-    setProducts(products.filter((p) => p.id !== id));
+  const handleDeleteProduct = async (id: string) => {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    
+    if (error) {
+      toast.error('Failed to delete product');
+      console.error(error);
+      return;
+    }
+    
     toast.success('Product deleted');
+    fetchProducts();
   };
 
   const handleUpdateOrderStatus = (orderId: string, status: string) => {
@@ -400,6 +459,22 @@ const AdminDashboard = () => {
                         placeholder="e.g., Diamond, Gold, Silver"
                       />
                     </div>
+                    <div>
+                      <Label>Material</Label>
+                      <Input
+                        value={newProduct.material}
+                        onChange={(e) => setNewProduct({ ...newProduct, material: e.target.value })}
+                        placeholder="e.g., 18K Gold, Sterling Silver"
+                      />
+                    </div>
+                    <div>
+                      <Label>Image URL</Label>
+                      <Input
+                        value={newProduct.image_url}
+                        onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
+                        placeholder="https://..."
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Price ($)</Label>
@@ -420,6 +495,26 @@ const AdminDashboard = () => {
                         />
                       </div>
                     </div>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newProduct.is_new}
+                          onChange={(e) => setNewProduct({ ...newProduct, is_new: e.target.checked })}
+                          className="rounded border-border"
+                        />
+                        <span className="text-sm">Mark as New</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newProduct.is_bestseller}
+                          onChange={(e) => setNewProduct({ ...newProduct, is_bestseller: e.target.checked })}
+                          className="rounded border-border"
+                        />
+                        <span className="text-sm">Bestseller</span>
+                      </label>
+                    </div>
                     <Button className="w-full" onClick={handleAddProduct}>
                       Add Product
                     </Button>
@@ -428,57 +523,68 @@ const AdminDashboard = () => {
               </Dialog>
             </div>
 
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>
-                        {product.category} / {product.subcategory}
-                      </TableCell>
-                      <TableCell>${product.price}</TableCell>
-                      <TableCell>{product.stock}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            product.status === 'Active'
-                              ? 'bg-green-500/10 text-green-500'
-                              : 'bg-red-500/10 text-red-500'
-                          }`}
-                        >
-                          {product.status}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="bg-card border border-border rounded-xl p-8 text-center">
+                <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No products yet. Add your first product!</p>
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>
+                          {product.category} / {product.subcategory}
+                        </TableCell>
+                        <TableCell>${product.price}</TableCell>
+                        <TableCell>{product.stock}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              product.status === 'Active'
+                                ? 'bg-green-500/10 text-green-500'
+                                : 'bg-red-500/10 text-red-500'
+                            }`}
+                          >
+                            {product.status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteProduct(product.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </motion.div>
         )}
 
