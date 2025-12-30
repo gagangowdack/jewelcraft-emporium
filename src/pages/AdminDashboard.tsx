@@ -94,7 +94,7 @@ const AdminDashboard = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        navigate('/admin');
+        navigate('/auth');
         return;
       }
 
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
       if (!roles) {
         toast.error('You do not have admin access');
         await supabase.auth.signOut();
-        navigate('/admin');
+        navigate('/auth');
         return;
       }
 
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
-    navigate('/admin');
+    navigate('/auth');
   };
 
   if (!isAuthenticated) {
