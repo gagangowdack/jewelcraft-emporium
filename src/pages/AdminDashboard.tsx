@@ -46,14 +46,19 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
 
-// Demo data for orders and users (not connected to DB yet)
-const initialOrders = [
-  { id: 'ORD-001', customer: 'Emma Wilson', items: 2, total: 3398, status: 'Delivered', date: '2024-01-15' },
-  { id: 'ORD-002', customer: 'James Brown', items: 1, total: 899, status: 'Shipped', date: '2024-01-16' },
-  { id: 'ORD-003', customer: 'Sofia Garcia', items: 3, total: 4147, status: 'Processing', date: '2024-01-17' },
-  { id: 'ORD-004', customer: 'Michael Chen', items: 1, total: 2499, status: 'Pending', date: '2024-01-18' },
-  { id: 'ORD-005', customer: 'Isabella Martinez', items: 2, total: 948, status: 'Delivered', date: '2024-01-18' },
-];
+interface Order {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  shipping_address: string;
+  items: unknown;
+  subtotal: number;
+  shipping_cost: number;
+  total: number;
+  status: string;
+  created_at: string;
+}
 
 const initialUsers = [
   { id: 1, name: 'Emma Wilson', email: 'emma@email.com', orders: 5, totalSpent: 8450, joined: '2023-06-15' },
@@ -83,8 +88,10 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [users] = useState(initialUsers);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -118,6 +125,21 @@ const AdminDashboard = () => {
     setIsLoading(false);
   };
 
+  // Fetch orders from database
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast.error('Failed to fetch orders');
+      console.error(error);
+    } else {
+      setOrders(data || []);
+    }
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -142,6 +164,7 @@ const AdminDashboard = () => {
 
       setIsAuthenticated(true);
       fetchProducts();
+      fetchOrders();
     };
 
     checkAuth();
@@ -218,7 +241,18 @@ const AdminDashboard = () => {
     fetchProducts();
   };
 
-  const handleUpdateOrderStatus = (orderId: string, status: string) => {
+  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', orderId);
+
+    if (error) {
+      toast.error('Failed to update order status');
+      console.error(error);
+      return;
+    }
+
     setOrders(orders.map((o) => (o.id === orderId ? { ...o, status } : o)));
     toast.success('Order status updated');
   };
@@ -384,17 +418,17 @@ const AdminDashboard = () => {
                 <TableBody>
                   {orders.slice(0, 5).map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{order.customer}</TableCell>
+                      <TableCell className="font-medium text-xs">{order.id.slice(0, 8)}...</TableCell>
+                      <TableCell>{order.customer_name}</TableCell>
                       <TableCell>${order.total}</TableCell>
                       <TableCell>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            order.status === 'Delivered'
+                          className={`px-2 py-1 rounded-full text-xs capitalize ${
+                            order.status === 'delivered'
                               ? 'bg-green-500/10 text-green-500'
-                              : order.status === 'Shipped'
+                              : order.status === 'shipped'
                               ? 'bg-blue-500/10 text-blue-500'
-                              : order.status === 'Processing'
+                              : order.status === 'processing'
                               ? 'bg-yellow-500/10 text-yellow-500'
                               : 'bg-gray-500/10 text-gray-500'
                           }`}
@@ -593,53 +627,153 @@ const AdminDashboard = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <h2 className="text-2xl font-bold mb-6">Order Management</h2>
 
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{order.customer}</TableCell>
-                      <TableCell>{order.items}</TableCell>
-                      <TableCell>${order.total}</TableCell>
-                      <TableCell>{order.date}</TableCell>
-                      <TableCell>
-                        <Select
-                          value={order.status}
-                          onValueChange={(v) => handleUpdateOrderStatus(order.id, v)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Processing">Processing</SelectItem>
-                            <SelectItem value="Shipped">Shipped</SelectItem>
-                            <SelectItem value="Delivered">Delivered</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
+            {orders.length === 0 ? (
+              <div className="bg-card border border-border rounded-xl p-8 text-center">
+                <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No orders yet.</p>
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium text-xs">{order.id.slice(0, 8)}...</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{order.customer_name}</p>
+                            <p className="text-xs text-muted-foreground">{order.customer_email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{order.customer_phone || 'N/A'}</TableCell>
+                        <TableCell className="max-w-[200px] truncate" title={order.shipping_address}>
+                          {order.shipping_address}
+                        </TableCell>
+                        <TableCell>${order.total}</TableCell>
+                        <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={order.status}
+                            onValueChange={(v) => handleUpdateOrderStatus(order.id, v)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="processing">Processing</SelectItem>
+                              <SelectItem value="shipped">Shipped</SelectItem>
+                              <SelectItem value="delivered">Delivered</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setIsOrderDetailOpen(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Order Detail Dialog */}
+            <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Order Details</DialogTitle>
+                </DialogHeader>
+                {selectedOrder && (
+                  <div className="space-y-6 mt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground">Order ID</Label>
+                        <p className="font-mono text-sm break-all">{selectedOrder.id}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Date</Label>
+                        <p>{new Date(selectedOrder.created_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t pt-4">
+                      <h4 className="font-semibold mb-2">Customer Details</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <Label className="text-muted-foreground">Name</Label>
+                          <p>{selectedOrder.customer_name}</p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Email</Label>
+                          <p>{selectedOrder.customer_email}</p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Phone</Label>
+                          <p>{selectedOrder.customer_phone || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Status</Label>
+                          <p className="capitalize">{selectedOrder.status}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h4 className="font-semibold mb-2">Delivery Address</h4>
+                      <p className="text-sm">{selectedOrder.shipping_address}</p>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h4 className="font-semibold mb-2">Order Items</h4>
+                      <div className="space-y-2">
+                        {Array.isArray(selectedOrder.items) && selectedOrder.items.map((item: any, idx: number) => (
+                          <div key={idx} className="flex justify-between text-sm">
+                            <span>{item.name} x {item.quantity}</span>
+                            <span>${(item.price * item.quantity).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4 space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Subtotal</span>
+                        <span>${selectedOrder.subtotal}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Shipping</span>
+                        <span>{selectedOrder.shipping_cost === 0 ? 'Free' : `$${selectedOrder.shipping_cost}`}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold">
+                        <span>Total</span>
+                        <span>${selectedOrder.total}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </motion.div>
         )}
 
