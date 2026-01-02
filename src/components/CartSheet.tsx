@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingBag, X, Plus, Minus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,10 +14,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export const CartSheet = () => {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const { cartItems, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
 
+  const handleCheckout = () => {
+    setOpen(false);
+    navigate("/checkout");
+  };
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -108,7 +117,10 @@ export const CartSheet = () => {
                 <p className="text-xs text-muted-foreground">
                   Shipping and taxes calculated at checkout
                 </p>
-                <Button className="w-full bg-gradient-gold text-charcoal hover:opacity-90 font-body uppercase tracking-wider">
+                <Button 
+                  onClick={handleCheckout}
+                  className="w-full bg-gradient-gold text-charcoal hover:opacity-90 font-body uppercase tracking-wider"
+                >
                   Checkout
                 </Button>
                 <Button
