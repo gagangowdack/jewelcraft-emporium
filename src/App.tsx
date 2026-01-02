@@ -12,6 +12,7 @@ import CollectionPage from "./pages/CollectionPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AuthPage from "./pages/AuthPage";
+import CheckoutPage from "./pages/CheckoutPage";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/category/:category" element={<CategoryPage />} />
       <Route path="/collection/:collection" element={<CollectionPage />} />
       <Route path="/admin" element={<AdminLogin />} />
