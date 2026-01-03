@@ -20,7 +20,6 @@ const checkoutSchema = z.object({
   address: z.string().min(10, "Please enter a complete address").max(500),
   city: z.string().min(2, "City is required").max(100),
   state: z.string().min(2, "State is required").max(100),
-  upiId: z.string().min(5, "Please enter a valid UPI ID").max(100).optional(),
 });
 
 const CheckoutPage = () => {
@@ -31,7 +30,7 @@ const CheckoutPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<string>("upi");
+  const [paymentMethod, setPaymentMethod] = useState<string>("gpay");
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -39,7 +38,6 @@ const CheckoutPage = () => {
     address: "",
     city: "",
     state: "",
-    upiId: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -77,11 +75,7 @@ const CheckoutPage = () => {
 
   const validateForm = () => {
     try {
-      const dataToValidate = {
-        ...formData,
-        upiId: paymentMethod === 'upi' ? formData.upiId : undefined,
-      };
-      checkoutSchema.parse(dataToValidate);
+      checkoutSchema.parse(formData);
       setErrors({});
       return true;
     } catch (error) {
@@ -111,10 +105,6 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (paymentMethod === 'upi' && !formData.upiId) {
-      setErrors(prev => ({ ...prev, upiId: "UPI ID is required" }));
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -457,39 +447,28 @@ const CheckoutPage = () => {
                 </h2>
 
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                  <div className={`flex items-center space-x-3 p-4 rounded-xl border ${paymentMethod === 'upi' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                    <RadioGroupItem value="upi" id="upi" />
-                    <Label htmlFor="upi" className="flex-1 cursor-pointer">
-                      <span className="font-medium">UPI Payment</span>
-                      <p className="text-sm text-muted-foreground">Pay using UPI ID (GPay, PhonePe, Paytm, etc.)</p>
+                  <div className={`flex items-center space-x-3 p-4 rounded-xl border ${paymentMethod === 'gpay' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                    <RadioGroupItem value="gpay" id="gpay" />
+                    <Label htmlFor="gpay" className="flex-1 cursor-pointer">
+                      <span className="font-medium">Google Pay</span>
+                      <p className="text-sm text-muted-foreground">Pay using GPay</p>
                     </Label>
                   </div>
-                  <div className={`flex items-center space-x-3 p-4 rounded-xl border ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                    <RadioGroupItem value="cod" id="cod" />
-                    <Label htmlFor="cod" className="flex-1 cursor-pointer">
-                      <span className="font-medium">Cash on Delivery</span>
-                      <p className="text-sm text-muted-foreground">Pay when you receive the order</p>
+                  <div className={`flex items-center space-x-3 p-4 rounded-xl border ${paymentMethod === 'phonepe' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                    <RadioGroupItem value="phonepe" id="phonepe" />
+                    <Label htmlFor="phonepe" className="flex-1 cursor-pointer">
+                      <span className="font-medium">PhonePe</span>
+                      <p className="text-sm text-muted-foreground">Pay using PhonePe</p>
+                    </Label>
+                  </div>
+                  <div className={`flex items-center space-x-3 p-4 rounded-xl border ${paymentMethod === 'paytm' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                    <RadioGroupItem value="paytm" id="paytm" />
+                    <Label htmlFor="paytm" className="flex-1 cursor-pointer">
+                      <span className="font-medium">Paytm</span>
+                      <p className="text-sm text-muted-foreground">Pay using Paytm</p>
                     </Label>
                   </div>
                 </RadioGroup>
-
-                {paymentMethod === 'upi' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="upiId">UPI ID *</Label>
-                    <Input
-                      id="upiId"
-                      value={formData.upiId}
-                      onChange={(e) =>
-                        setFormData({ ...formData, upiId: e.target.value })
-                      }
-                      placeholder="yourname@upi"
-                      className={errors.upiId ? "border-destructive" : ""}
-                    />
-                    {errors.upiId && (
-                      <p className="text-sm text-destructive">{errors.upiId}</p>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="bg-muted/30 rounded-xl p-4 text-sm text-muted-foreground">
